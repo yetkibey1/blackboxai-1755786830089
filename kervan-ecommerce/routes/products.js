@@ -8,46 +8,146 @@ const router = express.Router();
 // Get all products
 router.get('/', async (req, res) => {
   try {
-    const { page = 1, limit = 10, category, search, sort = 'createdAt' } = req.query;
+    const { 
+      page = 1, 
+      limit = 10, 
+      category, 
+      search, 
+      sort = 'createdAt',
+      minPrice,
+      maxPrice,
+      status = 'active',
+      featured,
+      tags
+    } = req.query;
     
-    const query = {};
+    const query = { status: status };
     
     // Add category filter
     if (category) {
       query.category = category;
     }
     
-    // Add search filter
+    // Add search filter (search in multilingual names and descriptions)
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { 'name.en': { $regex: search, $options: 'i' } },
+        { 'name.ka': { $regex: search, $options: 'i' } },
+        { 'name.tr': { $regex: search, $options: 'i' } },
+        { 'description.en': { $regex: search, $options: 'i' } },
+        { 'description.ka': { $regex: search, $options: 'i' } },
+        { 'description.tr': { $regex: search, $options: 'i' } },
+        { code: { $regex: search, $options: 'i' } },
+        { tags: { $in: [new RegExp(search, 'i')] } }
       ];
+    }
+    
+    // Add price range filter
+    if (minPrice || maxPrice) {
+      query['pricing.price1'] = {};
+      if (minPrice) query['pricing.price1'].$gte = parseFloat(minPrice);
+      if (maxPrice) query['pricing.price1'].$lte = parseFloat(maxPrice);
+    }
+    
+    // Add featured filter
+    if (featured !== undefined) {
+      query.featured = featured === 'true';
+    }
+    
+    // Add tags filter
+    if (tags) {
+      const tagArray = tags.split(',').map(tag => tag.trim());
+      query.tags = { $in: tagArray };
+    }
+    
+    // Build sort object
+    let sortObj = {};
+    switch (sort) {
+      case 'price_asc':
+        sortObj = { 'pricing.price1': 1 };
+        break;
+      case 'price_desc':
+        sortObj = { 'pricing.price1': -1 };
+        break;
+      case 'name_asc':
+        sortObj = { 'name.en': 1 };
+        break;
+      case 'name_desc':
+        sortObj = { 'name.en': -1 };
+        break;
+      case 'newest':
+        sortObj = { createdAt: -1 };
+        break;
+      case 'oldest':
+        sortObj = { createdAt: 1 };
+        break;
+      case 'featured':
+        sortObj = { featured: -1, createdAt: -1 };
+        break;
+      default:
+        sortObj = { createdAt: -1 };
     }
     
     const products = await Product.find(query)
       .populate('category', 'name')
-      .sort({ [sort]: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
+      .sort(sortObj)
+      .limit(parseInt(limit))
+      .skip((parseInt(page) - 1) * parseInt(limit))
       .exec();
     
     const total = await Product.countDocuments(query);
     
+    // Transform products for frontend consumption
+    const transformedProducts = products.map(product => ({
+      _id: product._id,
+      name: product.name.en || product.name.ka || product.name.tr,
+      description: product.description?.en || product.description?.ka || product.description?.tr || '',
+      price: product.pricing.price1,
+      currency: product.pricing.currency,
+      category: product.category,
+      images: product.images,
+      inStock: product.inventory.stock > 0,
+      stock: product.inventory.stock,
+      featured: product.featured,
+      status: product.status,
+      code: product.code,
+      slug: product.slug,
+      tags: product.tags,
+      ratings: product.ratings,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt
+    }));
+    
     res.json({
       success: true,
       data: {
-        products,
-        totalPages: Math.ceil(total / limit),
-        currentPage: page,
-        total
+        products: transformedProducts,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / parseInt(limit)),
+          totalItems: total,
+          itemsPerPage: parseInt(limit),
+          hasNextPage: parseInt(page) < Math.ceil(total / parseInt(limit)),
+          hasPrevPage: parseInt(page) > 1
+        },
+        filters: {
+          category,
+          search,
+          minPrice,
+          maxPrice,
+          status,
+          featured,
+          tags,
+          sort
+        }
       }
     });
   } catch (error) {
     console.error('Get products error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error while fetching products'
+      message: 'Server error while fetching products',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
@@ -55,7 +155,16 @@ router.get('/', async (req, res) => {
 // Get single product
 router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate('category', 'name');
+    const { id } = req.params;
+    
+    // Find by ID or slug
+    const query = id.match(/^[0-9a-fA-F]{24}$/) 
+      ? { _id: id } 
+      : { slug: id };
+    
+    const product = await Product.findOne(query)
+      .populate('category', 'name')
+      .populate('relatedProducts', 'name pricing images slug');
     
     if (!product) {
       return res.status(404).json({
@@ -64,15 +173,58 @@ router.get('/:id', async (req, res) => {
       });
     }
     
+    // Transform product for frontend consumption
+    const transformedProduct = {
+      _id: product._id,
+      name: product.name.en || product.name.ka || product.name.tr,
+      nameMultilingual: product.name,
+      description: product.description?.en || product.description?.ka || product.description?.tr || '',
+      descriptionMultilingual: product.description,
+      slug: product.slug,
+      code: product.code,
+      barcode: product.barcode,
+      category: product.category,
+      subcategory: product.subcategory,
+      images: product.images,
+      pricing: {
+        price: product.pricing.price1,
+        price1: product.pricing.price1,
+        price2: product.pricing.price2,
+        price3: product.pricing.price3,
+        activePrice: product.pricing.activePrice,
+        currency: product.pricing.currency
+      },
+      quantityDiscounts: product.quantityDiscounts,
+      inventory: {
+        stock: product.inventory.stock,
+        inStock: product.inventory.stock > 0,
+        minStockLevel: product.inventory.minStockLevel,
+        maxStockLevel: product.inventory.maxStockLevel,
+        unit: product.inventory.unit,
+        trackInventory: product.inventory.trackInventory
+      },
+      specifications: product.specifications,
+      status: product.status,
+      featured: product.featured,
+      tags: product.tags,
+      relatedProducts: product.relatedProducts,
+      ratings: product.ratings,
+      sales: product.sales,
+      seo: product.seo,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt
+    };
+    
     res.json({
       success: true,
-      data: { product }
+      data: { product: transformedProduct }
     });
   } catch (error) {
     console.error('Get product error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error while fetching product'
+      message: 'Server error while fetching product',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
