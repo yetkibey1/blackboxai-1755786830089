@@ -2,13 +2,40 @@ const nodemailer = require('nodemailer');
 
 class EmailService {
   constructor() {
-    this.transporter = nodemailer.createTransporter({
+    this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       }
     });
+  }
+
+  async sendWelcomeEmail(user) {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: 'Welcome to KERVAN!',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Welcome to KERVAN!</h2>
+          <p>Dear ${user.firstName} ${user.lastName},</p>
+          <p>Thank you for joining KERVAN - your complete wholesale e-commerce platform!</p>
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+            <h3>Your Account Details:</h3>
+            <p><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
+            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>Phone:</strong> ${user.phone}</p>
+          </div>
+          <p>You can now start exploring our wholesale products and place orders.</p>
+          <a href="${process.env.FRONTEND_URL}/products" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Browse Products</a>
+          <p style="margin-top: 20px;">If you have any questions, feel free to contact our support team.</p>
+          <p>Best regards,<br>The KERVAN Team</p>
+        </div>
+      `
+    };
+
+    return this.transporter.sendMail(mailOptions);
   }
 
   async sendPasswordResetEmail(email, resetToken) {
