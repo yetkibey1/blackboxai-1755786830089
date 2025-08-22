@@ -169,7 +169,7 @@ router.post('/login', [
 });
 
 // Get current user
-router.get('/me', auth, async (req, res) => {
+router.get('/me', auth.authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-password');
     if (!user) {
@@ -194,11 +194,12 @@ router.get('/me', auth, async (req, res) => {
 });
 
 // Update profile
-router.put('/profile', [auth, [
+router.put('/profile', [
+  auth.authenticateToken,
   body('firstName').optional().trim().isLength({ min: 2 }),
   body('lastName').optional().trim().isLength({ min: 2 }),
   body('phone').optional().trim().isLength({ min: 9 })
-]], async (req, res) => {
+], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -254,10 +255,11 @@ router.put('/profile', [auth, [
 });
 
 // Change password
-router.put('/change-password', [auth, [
+router.put('/change-password', [
+  auth.authenticateToken,
   body('currentPassword').exists().withMessage('Current password is required'),
   body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters')
-]], async (req, res) => {
+], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -306,7 +308,7 @@ router.put('/change-password', [auth, [
 });
 
 // Logout (client-side token removal, but we can track it)
-router.post('/logout', auth, async (req, res) => {
+router.post('/logout', auth.authenticateToken, async (req, res) => {
   try {
     // In a more sophisticated setup, you might want to blacklist the token
     // For now, we'll just send a success response
