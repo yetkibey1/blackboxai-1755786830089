@@ -119,20 +119,60 @@ export const orderAPI = {
 };
 
 export const adminAPI = {
-  // Get dashboard stats
+  // Dashboard
   getDashboardStats: () => api.get('/admin/dashboard'),
   
-  // Get all orders (admin)
+  // Products
+  getAllProducts: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        queryParams.append(key, params[key]);
+      }
+    });
+    return api.get(`/admin/products?${queryParams.toString()}`);
+  },
+  getLowStockProducts: () => api.get('/admin/products/low-stock'),
+  
+  // Orders
   getAllOrders: (params = {}) => {
-    const queryParams = new URLSearchParams(params);
+    const queryParams = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        queryParams.append(key, params[key]);
+      }
+    });
     return api.get(`/admin/orders?${queryParams.toString()}`);
   },
+  updateOrderStatus: (orderId, status) => api.put(`/admin/orders/${orderId}/status`, { status }),
   
-  // Get all users (admin)
+  // Users
   getAllUsers: (params = {}) => {
-    const queryParams = new URLSearchParams(params);
+    const queryParams = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        queryParams.append(key, params[key]);
+      }
+    });
     return api.get(`/admin/users?${queryParams.toString()}`);
   },
+  updateUserStatus: (userId, status) => api.put(`/admin/users/${userId}/status`, { status }),
+  updateUserRole: (userId, role) => api.put(`/admin/users/${userId}/role`, { role }),
+  
+  // Settings
+  getSettings: () => api.get('/admin/settings'),
+  updateSettings: (settings) => api.put('/admin/settings', settings),
+  
+  // Analytics
+  getAnalytics: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        queryParams.append(key, params[key]);
+      }
+    });
+    return api.get(`/admin/analytics?${queryParams.toString()}`);
+  }
 };
 
 // Utility functions
