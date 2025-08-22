@@ -27,7 +27,14 @@ export const CartProvider = ({ children }) => {
             : item
         );
       } else {
-        return [...prevItems, { ...product, quantity }];
+        // Ensure we have the correct price structure
+        const cartProduct = {
+          ...product,
+          quantity,
+          // Normalize price for cart calculations
+          price: product.price || product.pricing?.price || product.pricing?.price1 || 0
+        };
+        return [...prevItems, cartProduct];
       }
     });
   };
