@@ -93,6 +93,15 @@ if not exist ".env" (
 )
 
 echo.
+echo [6/6] Initializing database...
+call npm run init-db
+if errorlevel 1 (
+    echo ⚠️  Database initialization failed - you can run 'npm run init-db' later
+) else (
+    echo ✅ Database initialized with admin user and sample data
+)
+
+echo.
 echo 🎉 Setup Complete!
 echo.
 echo 📊 Configuration:
@@ -100,9 +109,18 @@ echo    Backend:  http://localhost:5000
 echo    Frontend: http://localhost:3000
 echo    Database: mongodb://localhost:27017/kervan-ecommerce
 echo.
+echo 🔑 Admin Login:
+echo    Email:    admin@kervan.com
+echo    Password: admin123
+echo.
 echo 🚀 To start the application:
 echo    npm run dev    - Start both backend and frontend
 echo    npm start      - Start backend only
+echo.
+echo 🌐 Access Points:
+echo    Frontend:    http://localhost:3000
+echo    Backend API: http://localhost:5000
+echo    Admin Panel: http://localhost:3000/admin
 echo.
 echo 📝 Next steps:
 echo    1. Edit .env file with your email credentials
