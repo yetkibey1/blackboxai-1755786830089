@@ -54,8 +54,13 @@ const Cart = () => {
                 <h3>{item.name}</h3>
                 <p>{item.description}</p>
                 <div className="item-price">
-                  ${item.price} each
+                  {item.price} {item.currency || 'GEL'} each
                 </div>
+                {item.code && (
+                  <div className="item-code">
+                    Code: {item.code}
+                  </div>
+                )}
               </div>
               
               <div className="item-quantity">
@@ -79,7 +84,7 @@ const Cart = () => {
               
               <div className="item-total">
                 <div className="total-price">
-                  ${(item.price * item.quantity).toFixed(2)}
+                  {(item.price * item.quantity).toFixed(2)} {item.currency || 'GEL'}
                 </div>
                 <button 
                   onClick={() => removeFromCart(item._id)}
@@ -97,7 +102,7 @@ const Cart = () => {
           
           <div className="summary-line">
             <span>Items ({cartItems.length}):</span>
-            <span>${getCartTotal().toFixed(2)}</span>
+            <span>{getCartTotal().toFixed(2)} {cartItems[0]?.currency || 'GEL'}</span>
           </div>
           
           <div className="summary-line">
@@ -107,7 +112,7 @@ const Cart = () => {
           
           <div className="summary-line total">
             <span><strong>Total:</strong></span>
-            <span><strong>${getCartTotal().toFixed(2)}</strong></span>
+            <span><strong>{getCartTotal().toFixed(2)} {cartItems[0]?.currency || 'GEL'}</strong></span>
           </div>
           
           <div className="cart-actions">
