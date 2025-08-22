@@ -1,0 +1,67 @@
+{
+  "project": {
+    "name": "KERVAN E-commerce Platform",
+    "version": "1.0.0",
+    "description": "Complete wholesale e-commerce platform"
+  },
+  "server": {
+    "port": 5000,
+    "environment": "development",
+    "host": "localhost"
+  },
+  "database": {
+    "mongodb_uri": "mongodb://localhost:27017/kervan-ecommerce",
+    "database_name": "kervan-ecommerce"
+  },
+  "frontend": {
+    "url": "http://localhost:3000",
+    "port": 3000
+  },
+  "security": {
+    "jwt_expires_in": "7d",
+    "bcrypt_salt_rounds": 12,
+    "rate_limit_window_ms": 900000,
+    "rate_limit_max_requests": 100
+  },
+  "email": {
+    "service": "gmail",
+    "from": "noreply@kervan.com"
+  },
+  "upload": {
+    "max_file_size": 5000000,
+    "allowed_types": ["image/jpeg", "image/png", "image/gif", "image/webp"]
+  },
+  "admin": {
+    "default_email": "admin@kervan.com",
+    "default_password": "admin123"
+  },
+  "features": {
+    "email_verification": true,
+    "password_reset": true,
+    "multi_language": true,
+    "supported_languages": ["ka", "en", "tr"],
+    "default_language": "ka",
+    "supported_currencies": ["GEL", "USD", "EUR", "TRY"],
+    "default_currency": "GEL"
+  },
+  "optional_services": {
+    "stripe": {
+      "enabled": false,
+      "webhook_endpoint": "/api/payments/stripe/webhook"
+    },
+    "aws_s3": {
+      "enabled": false,
+      "region": "us-east-1"
+    },
+    "redis": {
+      "enabled": false,
+      "url": "redis://localhost:6379"
+    }
+  },
+  "logging": {
+    "level": "info",
+    "file": "logs/app.log",
+    "max_files": 5,
+    "max_size": "10m"
+  }
+}
