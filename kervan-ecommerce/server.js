@@ -39,6 +39,29 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/kervan', 
 .then(() => console.log('✅ Connected to MongoDB'))
 .catch(err => console.error('❌ MongoDB connection error:', err));
 
+// Root route for development
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'KERVAN E-commerce API Server',
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      products: '/api/products',
+      categories: '/api/categories',
+      orders: '/api/orders',
+      admin: '/api/admin',
+      settings: '/api/settings',
+      payments: '/api/payments',
+      shipping: '/api/shipping'
+    },
+    frontend: process.env.FRONTEND_URL || 'http://localhost:3000',
+    documentation: 'See README.md for API documentation'
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
