@@ -138,6 +138,14 @@ chmod +x setup.js 2>/dev/null || true
 chmod +x quick-setup.sh 2>/dev/null || true
 
 echo
+echo "[6/6] Initializing database..."
+if npm run init-db; then
+    print_success "Database initialized with admin user and sample data"
+else
+    print_warning "Database initialization failed - you can run 'npm run init-db' later"
+fi
+
+echo
 print_title "🎉 Setup Complete!"
 echo
 print_info "📊 Configuration:"
@@ -145,9 +153,18 @@ echo "   Backend:  http://localhost:5000"
 echo "   Frontend: http://localhost:3000"
 echo "   Database: mongodb://localhost:27017/kervan-ecommerce"
 echo
+print_info "🔑 Admin Login:"
+echo "   Email:    admin@kervan.com"
+echo "   Password: admin123"
+echo
 print_info "🚀 To start the application:"
 echo "   npm run dev    - Start both backend and frontend"
 echo "   npm start      - Start backend only"
+echo
+print_info "🌐 Access Points:"
+echo "   Frontend:    http://localhost:3000"
+echo "   Backend API: http://localhost:5000"
+echo "   Admin Panel: http://localhost:3000/admin"
 echo
 print_info "📝 Next steps:"
 echo "   1. Edit .env file with your email credentials"
