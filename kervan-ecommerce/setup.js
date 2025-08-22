@@ -298,6 +298,19 @@ npm run dev
   log.success('Created Unix startup script: start.sh');
 }
 
+async function initializeDatabase() {
+  log.title('Initializing Database');
+  
+  try {
+    const { initializeDatabase } = require('./scripts/initDB');
+    await initializeDatabase();
+    log.success('Database initialized with admin user and sample data');
+  } catch (error) {
+    log.warning(`Database initialization failed: ${error.message}`);
+    log.info('You can run "npm run init-db" later to initialize the database');
+  }
+}
+
 function displayCompletionInfo(config) {
   log.title('Setup Complete!');
   
@@ -310,10 +323,15 @@ function displayCompletionInfo(config) {
   console.log(`   Environment: ${config.NODE_ENV}`);
   console.log(`   Admin Email: ${config.ADMIN_EMAIL}\n`);
   
+  console.log(`${colors.bright}🔑 Admin Login Credentials:${colors.reset}`);
+  console.log(`   ${colors.cyan}Email: ${config.ADMIN_EMAIL}${colors.reset}`);
+  console.log(`   ${colors.cyan}Password: ${config.ADMIN_PASSWORD}${colors.reset}\n`);
+  
   console.log(`${colors.bright}🚀 How to start:${colors.reset}`);
   console.log(`   ${colors.cyan}npm run dev${colors.reset}     - Start both backend and frontend`);
   console.log(`   ${colors.cyan}npm start${colors.reset}       - Start backend only`);
-  console.log(`   ${colors.cyan}npm run client${colors.reset}  - Start frontend only\n`);
+  console.log(`   ${colors.cyan}npm run client${colors.reset}  - Start frontend only`);
+  console.log(`   ${colors.cyan}npm run init-db${colors.reset} - Initialize database (if needed)\n`);
   
   console.log(`${colors.bright}📁 Quick start scripts:${colors.reset}`);
   console.log(`   ${colors.cyan}./start.sh${colors.reset}      - Unix/Linux/Mac`);
@@ -324,18 +342,18 @@ function displayCompletionInfo(config) {
   console.log(`   ${colors.cyan}README.md${colors.reset}       - Documentation`);
   console.log(`   ${colors.cyan}DEPLOYMENT.md${colors.reset}   - Deployment guide\n`);
   
-  console.log(`${colors.bright}🌐 API Endpoints:${colors.reset}`);
-  console.log(`   ${colors.cyan}http://localhost:${config.PORT}${colors.reset}           - API Info`);
-  console.log(`   ${colors.cyan}http://localhost:${config.PORT}/api/health${colors.reset} - Health Check`);
-  console.log(`   ${colors.cyan}http://localhost:${config.PORT}/api/auth${colors.reset}   - Authentication`);
-  console.log(`   ${colors.cyan}http://localhost:${config.PORT}/api/products${colors.reset} - Products\n`);
+  console.log(`${colors.bright}🌐 Access Points:${colors.reset}`);
+  console.log(`   ${colors.cyan}Frontend: ${config.FRONTEND_URL}${colors.reset}`);
+  console.log(`   ${colors.cyan}Backend API: http://localhost:${config.PORT}${colors.reset}`);
+  console.log(`   ${colors.cyan}Admin Panel: ${config.FRONTEND_URL}/admin${colors.reset}`);
+  console.log(`   ${colors.cyan}API Health: http://localhost:${config.PORT}/api/health${colors.reset}\n`);
   
   if (!config.EMAIL_USER) {
     log.warning('Email not configured - some features may not work');
     console.log(`   Configure email in .env file for full functionality\n`);
   }
   
-  console.log(`${colors.green}Happy coding! 🚀${colors.reset}\n`);
+  console.log(`${colors.green}Ready to go! 🚀${colors.reset}\n`);
 }
 
 async function main() {
@@ -356,6 +374,9 @@ async function main() {
     createDirectories();
     installDependencies();
     createStartupScripts();
+    
+    // Initialize database with admin user and sample data
+    await initializeDatabase();
     
     displayCompletionInfo(config);
     
