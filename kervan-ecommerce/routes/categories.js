@@ -8,18 +8,46 @@ const router = express.Router();
 // Get all categories
 router.get('/', async (req, res) => {
   try {
-    const categories = await Category.find({ isActive: true })
-      .sort({ name: 1 });
+    const { includeInactive = false } = req.query;
+    
+    const query = includeInactive === 'true' ? {} : { status: 'active' };
+    
+    const categories = await Category.find(query)
+      .populate('parent', 'name')
+      .populate('children', 'name')
+      .sort({ sortOrder: 1, 'name.en': 1 });
+    
+    // Transform categories for frontend consumption
+    const transformedCategories = categories.map(category => ({
+      _id: category._id,
+      name: category.name.en || category.name.ka || category.name.tr,
+      nameMultilingual: category.name,
+      description: category.description?.en || category.description?.ka || category.description?.tr || '',
+      descriptionMultilingual: category.description,
+      slug: category.slug,
+      parent: category.parent,
+      children: category.children,
+      image: category.image,
+      icon: category.icon,
+      status: category.status,
+      featured: category.featured,
+      sortOrder: category.sortOrder,
+      productCount: category.productCount,
+      seo: category.seo,
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt
+    }));
     
     res.json({
       success: true,
-      data: { categories }
+      data: { categories: transformedCategories }
     });
   } catch (error) {
     console.error('Get categories error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error while fetching categories'
+      message: 'Server error while fetching categories',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
