@@ -92,36 +92,76 @@ async function createAdminUser() {
 
 async function createDefaultCategories() {
   try {
+    const adminUser = await User.findOne({ role: 'admin' });
+    
     const categories = [
       {
-        name: 'Electronics',
-        description: 'Electronic devices and accessories',
+        name: {
+          en: 'Electronics',
+          ka: 'ელექტრონიკა',
+          tr: 'Elektronik'
+        },
+        description: {
+          en: 'Electronic devices and accessories',
+          ka: 'ელექტრონული მოწყობილობები და აქსესუარები',
+          tr: 'Elektronik cihazlar ve aksesuarlar'
+        },
         slug: 'electronics',
-        isActive: true
+        status: 'active',
+        featured: true,
+        sortOrder: 1,
+        createdBy: adminUser._id
       },
       {
-        name: 'Clothing',
-        description: 'Fashion and apparel',
-        slug: 'clothing',
-        isActive: true
+        name: {
+          en: 'Clothing & Fashion',
+          ka: 'ტანსაცმელი და მოდა',
+          tr: 'Giyim ve Moda'
+        },
+        description: {
+          en: 'Fashion and apparel for all occasions',
+          ka: 'მოდა და ტანსაცმელი ყველა შემთხვევისთვის',
+          tr: 'Her durum için moda ve giyim'
+        },
+        slug: 'clothing-fashion',
+        status: 'active',
+        featured: true,
+        sortOrder: 2,
+        createdBy: adminUser._id
       },
       {
-        name: 'Home & Garden',
-        description: 'Home improvement and garden supplies',
+        name: {
+          en: 'Home & Garden',
+          ka: 'სახლი და ბაღი',
+          tr: 'Ev ve Bahçe'
+        },
+        description: {
+          en: 'Home improvement and garden supplies',
+          ka: 'სახლის გაუმჯობესება და ბაღის მარაგები',
+          tr: 'Ev geliştirme ve bahçe malzemeleri'
+        },
         slug: 'home-garden',
-        isActive: true
+        status: 'active',
+        featured: false,
+        sortOrder: 3,
+        createdBy: adminUser._id
       },
       {
-        name: 'Sports & Outdoors',
-        description: 'Sports equipment and outdoor gear',
+        name: {
+          en: 'Sports & Outdoors',
+          ka: 'სპორტი და გარე აქტივობები',
+          tr: 'Spor ve Açık Hava'
+        },
+        description: {
+          en: 'Sports equipment and outdoor gear',
+          ka: 'სპორტული აღჭურვილობა და გარე აღჭურვილობა',
+          tr: 'Spor ekipmanları ve açık hava malzemeleri'
+        },
         slug: 'sports-outdoors',
-        isActive: true
-      },
-      {
-        name: 'Books & Media',
-        description: 'Books, movies, music, and games',
-        slug: 'books-media',
-        isActive: true
+        status: 'active',
+        featured: false,
+        sortOrder: 4,
+        createdBy: adminUser._id
       }
     ];
 
@@ -134,7 +174,7 @@ async function createDefaultCategories() {
     for (const categoryData of categories) {
       const category = new Category(categoryData);
       await category.save();
-      log.success(`Created category: ${categoryData.name}`);
+      log.success(`Created category: ${categoryData.name.en}`);
     }
   } catch (error) {
     log.error(`Failed to create categories: ${error.message}`);
@@ -151,66 +191,182 @@ async function createSampleProducts() {
     }
 
     const categories = await Category.find();
+    const adminUser = await User.findOne({ role: 'admin' });
+    
     if (categories.length === 0) {
       log.warning('No categories found, skipping product creation');
       return;
     }
 
+    // Get categories by slug
+    const electronicsCategory = categories.find(cat => cat.slug === 'electronics');
+    const clothingCategory = categories.find(cat => cat.slug === 'clothing-fashion');
+    const homeCategory = categories.find(cat => cat.slug === 'home-garden');
+    const sportsCategory = categories.find(cat => cat.slug === 'sports-outdoors');
+
     const sampleProducts = [
       {
-        name: 'Wireless Bluetooth Headphones',
-        description: 'High-quality wireless headphones with noise cancellation',
-        price: 99.99,
-        category: categories[0]._id, // Electronics
-        sku: 'WBH-001',
-        stockQuantity: 50,
-        minOrderQuantity: 1,
-        isActive: true,
+        name: {
+          en: 'Wireless Bluetooth Headphones',
+          ka: 'უსადენო ბლუთუზ ყურსასმენები',
+          tr: 'Kablosuz Bluetooth Kulaklık'
+        },
+        description: {
+          en: 'High-quality wireless headphones with active noise cancellation and 30-hour battery life',
+          ka: 'მაღალი ხარისხის უსადენო ყურსასმენები აქტიური ხმაურის გაუქმებით და 30 საათიანი ბატარეით',
+          tr: 'Aktif gürültü önleme ve 30 saatlik pil ömrü ile yüksek kaliteli kablosuz kulaklık'
+        },
+        code: 'WBH001',
+        barcode: '1234567890123',
+        category: electronicsCategory._id,
+        pricing: {
+          price1: 99.99,
+          price2: 89.99,
+          price3: 79.99,
+          activePrice: 'price1',
+          currency: 'GEL'
+        },
+        inventory: {
+          stock: 50,
+          minStockLevel: 10,
+          unit: 'pcs',
+          trackInventory: true
+        },
         specifications: {
-          'Brand': 'KERVAN Audio',
-          'Battery Life': '30 hours',
-          'Connectivity': 'Bluetooth 5.0',
-          'Weight': '250g'
-        }
+          brand: 'KERVAN Audio',
+          color: 'Black',
+          weight: { value: 250, unit: 'g' },
+          dimensions: { length: 18, width: 15, height: 8, unit: 'cm' }
+        },
+        status: 'active',
+        featured: true,
+        tags: ['wireless', 'bluetooth', 'headphones', 'audio'],
+        createdBy: adminUser._id
       },
       {
-        name: 'Cotton T-Shirt',
-        description: 'Comfortable 100% cotton t-shirt available in multiple colors',
-        price: 19.99,
-        category: categories[1]._id, // Clothing
-        sku: 'CTS-001',
-        stockQuantity: 100,
-        minOrderQuantity: 5,
-        isActive: true,
+        name: {
+          en: 'Premium Cotton T-Shirt',
+          ka: 'პრემიუმ ბამბის მაისური',
+          tr: 'Premium Pamuk T-Shirt'
+        },
+        description: {
+          en: 'Comfortable 100% organic cotton t-shirt with modern fit and sustainable production',
+          ka: 'კომფორტული 100% ორგანული ბამბის მაისური თანამედროვე ფიტით და მდგრადი წარმოებით',
+          tr: 'Modern kesim ve sürdürülebilir üretim ile rahat %100 organik pamuk t-shirt'
+        },
+        code: 'PCT003',
+        barcode: '1234567890125',
+        category: clothingCategory._id,
+        pricing: {
+          price1: 19.99,
+          price2: 17.99,
+          price3: 15.99,
+          activePrice: 'price1',
+          currency: 'GEL'
+        },
+        quantityDiscounts: [
+          { minQuantity: 10, maxQuantity: 49, price: 17.99 },
+          { minQuantity: 50, price: 15.99 }
+        ],
+        inventory: {
+          stock: 100,
+          minStockLevel: 20,
+          unit: 'pcs',
+          trackInventory: true
+        },
         specifications: {
-          'Material': '100% Cotton',
-          'Sizes': 'S, M, L, XL, XXL',
-          'Colors': 'White, Black, Blue, Red',
-          'Care': 'Machine washable'
-        }
+          brand: 'KERVAN Fashion',
+          material: '100% Organic Cotton',
+          color: 'White'
+        },
+        status: 'active',
+        featured: false,
+        tags: ['cotton', 't-shirt', 'organic', 'fashion'],
+        createdBy: adminUser._id
       },
       {
-        name: 'LED Desk Lamp',
-        description: 'Adjustable LED desk lamp with touch controls',
-        price: 45.99,
-        category: categories[2]._id, // Home & Garden
-        sku: 'LDL-001',
-        stockQuantity: 30,
-        minOrderQuantity: 2,
-        isActive: true,
+        name: {
+          en: 'LED Desk Lamp',
+          ka: 'LED მაგიდის ნათურა',
+          tr: 'LED Masa Lambası'
+        },
+        description: {
+          en: 'Adjustable LED desk lamp with touch control and USB charging port',
+          ka: 'რეგულირებადი LED მაგიდის ნათურა სენსორული კონტროლით და USB დამტენი პორტით',
+          tr: 'Dokunmatik kontrol ve USB şarj portu ile ayarlanabilir LED masa lambası'
+        },
+        code: 'LDL004',
+        barcode: '1234567890126',
+        category: homeCategory._id,
+        pricing: {
+          price1: 39.99,
+          price2: 35.99,
+          price3: 31.99,
+          activePrice: 'price1',
+          currency: 'GEL'
+        },
+        inventory: {
+          stock: 25,
+          minStockLevel: 5,
+          unit: 'pcs',
+          trackInventory: true
+        },
         specifications: {
-          'Power': '12W LED',
-          'Brightness': '3 levels',
-          'Color Temperature': '3000K-6500K',
-          'USB Charging': 'Yes'
-        }
+          brand: 'KERVAN Home',
+          color: 'White',
+          weight: { value: 800, unit: 'g' },
+          dimensions: { length: 40, width: 20, height: 45, unit: 'cm' }
+        },
+        status: 'active',
+        featured: false,
+        tags: ['led', 'lamp', 'desk', 'home', 'office'],
+        createdBy: adminUser._id
+      },
+      {
+        name: {
+          en: 'Yoga Mat Premium',
+          ka: 'იოგას ხალიჩა პრემიუმ',
+          tr: 'Premium Yoga Matı'
+        },
+        description: {
+          en: 'Non-slip premium yoga mat made from eco-friendly materials with alignment guides',
+          ka: 'არასრიალა პრემიუმ იოგას ხალიჩა ეკოლოგიურად სუფთა მასალებისგან შესწორების გიდებით',
+          tr: 'Hizalama kılavuzları ile çevre dostu malzemelerden yapılmış kaymaz premium yoga matı'
+        },
+        code: 'YMP005',
+        barcode: '1234567890127',
+        category: sportsCategory._id,
+        pricing: {
+          price1: 29.99,
+          price2: 26.99,
+          price3: 23.99,
+          activePrice: 'price1',
+          currency: 'GEL'
+        },
+        inventory: {
+          stock: 40,
+          minStockLevel: 10,
+          unit: 'pcs',
+          trackInventory: true
+        },
+        specifications: {
+          brand: 'KERVAN Sports',
+          material: 'TPE (Thermoplastic Elastomer)',
+          color: 'Purple',
+          weight: { value: 1200, unit: 'g' },
+          dimensions: { length: 183, width: 61, height: 0.6, unit: 'cm' }
+        },
+        status: 'active',
+        featured: false,
+        tags: ['yoga', 'mat', 'fitness', 'exercise', 'eco-friendly'],
+        createdBy: adminUser._id
       }
     ];
 
     for (const productData of sampleProducts) {
       const product = new Product(productData);
       await product.save();
-      log.success(`Created product: ${productData.name}`);
+      log.success(`Created product: ${productData.name.en}`);
     }
   } catch (error) {
     log.error(`Failed to create sample products: ${error.message}`);
