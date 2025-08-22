@@ -10,7 +10,11 @@
     "client": "cd client && npm start",
     "build": "cd client && npm run build",
     "heroku-postbuild": "npm install && cd client && npm install && npm run build",
-    "init-db": "node scripts/initDB.js"
+    "init-db": "node scripts/initDB.js",
+    "setup": "node setup.js",
+    "setup:quick": "chmod +x quick-setup.sh && ./quick-setup.sh",
+    "setup:windows": "quick-setup.bat",
+    "postinstall": "echo 'Run npm run setup for interactive configuration or npm run setup:quick for quick setup'"
   },
   "keywords": ["ecommerce", "wholesale", "nodejs", "react", "mongodb"],
   "author": "KERVAN Team",
